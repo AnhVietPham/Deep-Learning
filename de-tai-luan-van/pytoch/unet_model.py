@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+from torchsummary import summary
 
 
 def double_conv(in_channels, out_channels):
@@ -59,12 +60,16 @@ class UNet(nn.Module):
 
 
 if __name__ == "__main__":
-    im = torch.randn(1, 3, 572, 572)
-    print(im.shape)
-    print("Test Conv2d:")
-    output1 = nn.Conv2d(3, 64, 3, padding=1)(im)
-    print(output1.shape)
-    print("Test Maxpool2d:")
-    output2 = nn.MaxPool2d(2)(im)
-    print(output2.shape)
-    print(512 // 2)
+    # im = torch.randn(1, 3, 572, 572)
+    # print(im.shape)
+    # print("Test Conv2d:")
+    # output1 = nn.Conv2d(3, 64, 3, padding=1)(im)
+    # print(output1.shape)
+    # print("Test Maxpool2d:")
+    # output2 = nn.MaxPool2d(2)(im)
+    # print(output2.shape)
+    # print(512 // 2)
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    model = UNet(6)
+    model = model.to(device)
+    summary(model, input_size=(3, 224, 224))
