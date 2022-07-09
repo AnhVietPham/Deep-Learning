@@ -27,7 +27,7 @@ def dice_loss(pred, target, smooth=1.):
 def calc_loss(pred, target, metrics, bce_weight=0.5):
     bce = F.binary_cross_entropy_with_logits(pred, target)
 
-    pred = F.sigmoid(pred)
+    pred = torch.sigmoid(pred)
     dice = dice_loss(pred, target)
 
     loss = bce * bce_weight + dice * (1 - bce_weight)
@@ -114,15 +114,15 @@ if __name__ == "__main__":
         transforms.ToTensor()
     ])
 
-    train_set = SimpleDataset(100, transform=trans)
-    val_set = SimpleDataset(50, transform=trans)
+    train_set = SimpleDataset(10, transform=trans)
+    val_set = SimpleDataset(5, transform=trans)
 
     image_datasets = {
         'train': train_set,
         'val': val_set
     }
 
-    batch_size = 25
+    batch_size = 3
 
     dataloaders = {
         'train': DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=0),
@@ -134,9 +134,10 @@ if __name__ == "__main__":
     }
 
     model = unet_model.UNet(num_class).to(device)
-    # Observe that all parameters are being optimized
+
+    # # Observe that all parameters are being optimized
     optimizer_ft = optim.Adam(model.parameters(), lr=1e-4)
 
     exp_lr_scheduler = lr_scheduler.StepLR(optimizer_ft, step_size=25, gamma=0.1)
 
-    model = train_model(model, optimizer_ft, exp_lr_scheduler, dataloaders, device, num_epochs=40)
+    model = train_model(model, optimizer_ft, exp_lr_scheduler, dataloaders, device, num_epochs=10)

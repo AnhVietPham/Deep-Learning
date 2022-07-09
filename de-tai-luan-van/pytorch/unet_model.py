@@ -72,4 +72,4 @@ if __name__ == "__main__":
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = UNet(6)
     model = model.to(device)
-    summary(model, input_size=(3, 224, 224))
+    summary(model, input_size=(3, 224, 224), batch_size=1)
