@@ -8,10 +8,14 @@ from torchvision import datasets, transforms
 import matplotlib.pyplot as plt
 import numpy as np
 from six.moves import urllib
+from torchsummary import summary
 
-opener = urllib.request.build_opener()
-opener.addheaders = [('User-agent', 'Mozilla/5.0')]
-urllib.request.install_opener(opener)
+
+
+# opener = urllib.request.build_opener()
+# opener.addheaders = [('User-agent', 'Mozilla/5.0')]
+# urllib.request.install_opener(opener)
+
 
 # https://towardsdatascience.com/spatial-transformer-tutorial-part-1-forward-and-reverse-mapping-8d3f66375bf5
 
@@ -87,7 +91,7 @@ class Net(nn.Module):
 def train(epoch, model, optim, train_loader):
     model.train()
     for batch_idx, (data, target) in enumerate(train_loader):
-        optimizer.zero_grad()
+        optim.zero_grad()
         output = model(data)
         loss = F.nll_loss(output, target)
         loss.backward()
@@ -113,55 +117,57 @@ def test(model, test_loader):
               f'   ({100. * correct / len(test_loader.dataset)})\n')
 
 
-def convert_image_np(inp):
-    inp = inp.numpy().transpose(1, 2, 0)
-    mean = np.array([0.485, 0.456, 0.406])
-    std = np.array([0.229, 0.224, 0.225])
-    inp = std * inp + mean
-    inp = np.clip(inp, 0, 1)
-    return inp
-
-
-def visualize_stn(test_loader):
-    with torch.no_grad():
-        data = next(iter(test_loader))[0]
-        input_tensor = data.cpu()
-        transformed_input_tensor = model.stn(data).cpu()
-        in_grid = convert_image_np(torchvision.utils.make_grid(input_tensor))
-
-        out_grid = convert_image_np(
-            torchvision.utils.make_grid(transformed_input_tensor)
-        )
-
-        f, (axarr1, axarr2) = plt.subplot(1, 2)
-        axarr1.imshow(in_grid)
-        axarr1.set_title('Dataset Images')
-
-        axarr2.imshow(out_grid)
-        axarr2.set_title('Transformed Images')
+# def convert_image_np(inp):
+#     inp = inp.numpy().transpose(1, 2, 0)
+#     mean = np.array([0.485, 0.456, 0.406])
+#     std = np.array([0.229, 0.224, 0.225])
+#     inp = std * inp + mean
+#     inp = np.clip(inp, 0, 1)
+#     return inp
+#
+#
+# def visualize_stn(test_loader):
+#     with torch.no_grad():
+#         data = next(iter(test_loader))[0]
+#         input_tensor = data.cpu()
+#         transformed_input_tensor = model.stn(data).cpu()
+#         in_grid = convert_image_np(torchvision.utils.make_grid(input_tensor))
+#
+#         out_grid = convert_image_np(
+#             torchvision.utils.make_grid(transformed_input_tensor)
+#         )
+#
+#         f, (axarr1, axarr2) = plt.subplot(1, 2)
+#         axarr1.imshow(in_grid)
+#         axarr1.set_title('Dataset Images')
+#
+#         axarr2.imshow(out_grid)
+#         axarr2.set_title('Transformed Images')
 
 
 if __name__ == '__main__':
     # downLoadDatasets()
-    train_loader = DataLoader(
-        dataset=datasets.MNIST(root='.', train=True, download=False,
-                               transform=transforms.Compose([
-                                   transforms.ToTensor(),
-                                   transforms.Normalize((0.1327,), (0.3081,))
-                               ])),
-        batch_size=32, shuffle=True, num_workers=4)
-
-    test_loader = DataLoader(
-        dataset=datasets.MNIST(root='.', train=False,
-                               transform=transforms.Compose([
-                                   transforms.ToTensor(),
-                                   transforms.Normalize((0.1327,), (0.3081,))
-                               ])),
-        batch_size=32, shuffle=True, num_workers=4)
+    # train_loader = DataLoader(
+    #     dataset=datasets.MNIST(root='.', train=True, download=False,
+    #                            transform=transforms.Compose([
+    #                                transforms.ToTensor(),
+    #                                transforms.Normalize((0.1327,), (0.3081,))
+    #                            ])),
+    #     batch_size=32, shuffle=True, num_workers=4)
+    #
+    # test_loader = DataLoader(
+    #     dataset=datasets.MNIST(root='.', train=False,
+    #                            transform=transforms.Compose([
+    #                                transforms.ToTensor(),
+    #                                transforms.Normalize((0.1327,), (0.3081,))
+    #                            ])),
+    #     batch_size=32, shuffle=True, num_workers=4)
+    # model = Net()
+    # optimizer = optim.SGD(model.parameters(), lr=0.01)
+    # for epoch in range(1, 2):
+    #     train(epoch, model, optimizer, train_loader=train_loader)
+    # visualize_stn(test_loader)
+    # plt.ioff()
+    # plt.show()
     model = Net()
-    optimizer = optim.SGD(model.parameters(), lr=0.01)
-    for epoch in range(1, 2):
-        train(epoch, model, optimizer, train_loader=train_loader)
-    visualize_stn(test_loader)
-    plt.ioff()
-    plt.show()
+    summary(model, input_size=(1, 28, 28), batch_size=1)
