@@ -1,7 +1,7 @@
 import os
 import numpy as np
 import cv2
-from tensorflow.keras.utils import Sequence
+from keras.utils import Sequence
 
 
 def parse_image(img_path, image_size):
