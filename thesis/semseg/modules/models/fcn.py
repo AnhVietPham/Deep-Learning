@@ -1,7 +1,8 @@
 import torch.nn as nn
 import functools
-from semseg.modules.losses.losses import cross_entropy2d
+from .semseg.modules.losses.losses import cross_entropy2d
 from semseg.modules.utils import get_upsampling_weight
+
 
 
 # FCN8s
