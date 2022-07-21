@@ -1,8 +1,8 @@
 import torch.nn as nn
 import functools
-from .semseg.modules.losses.losses import cross_entropy2d
-from semseg.modules.utils import get_upsampling_weight
-
+from thesis.semseg.modules.losses.losses import cross_entropy2d
+from thesis.semseg.modules.utils import get_upsampling_weight
+from torchsummary import summary
 
 
 # FCN8s
@@ -40,7 +40,7 @@ class FCN8s(nn.Module):
         )
 
         self.conv_block4 = nn.Sequential(
-            nn.Conv2d(256, 256, 3, padding=1),
+            nn.Conv2d(256, 512, 3, padding=1),
             nn.ReLU(inplace=True),
             nn.Conv2d(512, 512, 3, padding=1),
             nn.ReLU(inplace=True),
@@ -70,7 +70,7 @@ class FCN8s(nn.Module):
         )
 
         self.score_pool4 = nn.Conv2d(512, self.n_classes, 1)
-        self.score_pool5 = nn.Conv2d(256, self.n_classes, 1)
+        self.score_pool3 = nn.Conv2d(256, self.n_classes, 1)
 
         if self.learned_billinear:
             self.upscore2 = nn.ConvTranspose2d(
@@ -142,3 +142,8 @@ class FCN8s(nn.Module):
             l2 = self.classifier[6]
             l2.weight.data = l1.weight.data[:n_class, :].view(l2.weight.size())
             l2.bias.data = l1.bias.data[:n_class]
+
+
+if __name__ == "__main__":
+    model = FCN8s(6)
+    summary(model, input_size=(3, 224, 224), batch_size=1)
