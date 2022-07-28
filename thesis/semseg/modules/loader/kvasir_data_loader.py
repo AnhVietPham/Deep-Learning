@@ -39,4 +39,8 @@ class KvasirDataLoader(object):
     def __getitem__(self, index):
         image = parse_image(self.path_images[index], 256)
         mask = parse_mask(self.path_masks[index], 256)
+        image = np.transpose(image, (2, 0, 1))
+        image = image.astype(dtype=np.float32)
+        mask = np.transpose(mask, (2, 0, 1))
+        mask = mask.astype(dtype=np.float32)
         return image, mask
