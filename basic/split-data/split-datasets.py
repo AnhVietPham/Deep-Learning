@@ -12,7 +12,6 @@ from skimage import io
 from sklearn.model_selection import train_test_split
 from skimage.transform import resize
 import numpy as np
-from matplotlib import pyplot as plt
 from skimage.color import rgb2gray
 import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
@@ -95,12 +94,59 @@ x_image = io.imread(x_train[0])
 y_mask = io.imread(y_train[0])
 y_mask = rgb2gray(y_mask)
 
-fig, axes = plt.subplots(1, 2, figsize=(8, 4))
-axes[0].imshow(x_image)
-axes[0].set_title("Image")
 
-axes[1].imshow(y_mask)
-axes[1].set_title("Mask")
+# fig, axes = plt.subplots(1, 2, figsize=(8, 4))
+# axes[0].imshow(x_image)
+# axes[0].set_title("Image")
+#
+# axes[1].imshow(y_mask)
+# axes[1].set_title("Mask")
+
+class IoUBCELoss(nn.Module):
+    def __init__(self, weight=None, size_average=True):
+        super(IoUBCELoss, self).__init__()
+
+    def forward(self, inputs, targets, smooth=1):
+        # comment out if your model contains a sigmoid or equivalent activation layer
+        inputs = torch.sigmoid(inputs)
+
+        # flatten label and prediction tensors
+        inputs = inputs.view(-1)
+        targets = targets.view(-1)
+
+        # intersection is equivalent to True Positive count
+        # union is the mutually inclusive area of all labels & predictions
+        intersection = (inputs * targets).sum()
+        total = (inputs + targets).sum()
+        union = total - intersection
+
+        IoU = - (intersection + smooth) / (union + smooth)
+
+        BCE = F.binary_cross_entropy(inputs, targets, reduction='mean')
+        IoU_BCE = BCE + IoU
+
+        return IoU_BCE
+
+
+def iou_pytorch_eval(outputs: torch.Tensor, labels: torch.Tensor):
+    # comment out if your model contains a sigmoid or equivalent activation layer
+    outputs = torch.sigmoid(outputs)
+
+    # thresholding since that's how we will make predictions on new imputs
+    outputs = outputs > 0.5
+
+    # You can comment out this line if you are passing tensors of equal shape
+    # But if you are passing output from UNet or something it will most probably
+    # be with the BATCH x 1 x H x W shape
+    outputs = outputs.squeeze(1).byte()  # BATCH x 1 x H x W -> BATCH x H x W
+    labels = labels.squeeze(1).byte()
+
+    SMOOTH = 1e-8
+    intersection = (outputs & labels).float().sum((1, 2))  # Will be zero if Truth=0 or Prediction=0
+    union = (outputs | labels).float().sum((1, 2))  # Will be zero if both are 0
+    iou = (intersection + SMOOTH) / (union + SMOOTH)  # We smooth our devision to avoid 0/0
+
+    return iou.mean()
 
 
 class FCN2(nn.Module):
@@ -189,33 +235,14 @@ if __name__ == '__main__':
     DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = FCN2(n_class=1)
     model = model.to(DEVICE)
+    criterion = IoUBCELoss()
     dataiter = iter(dataloader_train)
     images_dataloader, labels_dataloader = dataiter.next()
-    x_image = images_dataloader[0]
-    y_mask = labels_dataloader[0]
+    x_image = images_dataloader
+    y_mask = labels_dataloader
     imgs, masks = x_image.to(DEVICE), y_mask.to(DEVICE)
     imgs, masks = imgs.float(), masks.float()
-    imgs = imgs.unsqueeze(0)
     prediction = model(imgs)
 
-    imgs = imgs.squeeze(0)
-    imgs = imgs.detach().numpy()
-    imgs = np.transpose(imgs, (1, 2, 0))
-    masks = masks.detach().numpy()
-    masks = np.transpose(masks, (1, 2, 0))
-    prediction = prediction.squeeze(0)
-    prediction = prediction.detach().numpy()
-    prediction = np.transpose(prediction, (1, 2, 0))
-
-    fig, axes = plt.subplots(1, 3, figsize=(8, 4))
-    axes[0].imshow(imgs)
-    axes[0].set_title("Image")
-
-    axes[1].imshow(masks)
-    axes[1].set_title("Mask")
-
-    axes[2].imshow(prediction)
-    axes[2].set_title("Prediction")
-
-
-
+    loss = criterion(prediction, masks)
+    print(loss)
