@@ -8,15 +8,17 @@ if __name__ == "__main__":
     new_length = 6
     ratio = (length - 1) / (new_length - 1)
     for i in range(new_length):
-        floor_point = math.floor(ratio * i)
-        ceil_point = math.ceil(ratio * i)
-        print(f"Floor Point: {floor_point}, Ceil Point: {ceil_point}")
-        print(f"Floor Value: {original_image[floor_point]}, Ceil Value: {original_image[ceil_point]}")
-        if ceil_point == floor_point and original_image[floor_point] == original_image[ceil_point]:
-            new_array.append(original_image[floor_point])
+        x_floor_point = math.floor(ratio * i)
+        x_ceil_point = math.ceil(ratio * i)
+        y_floor_point = original_image[x_floor_point]
+        y_ceil_point = original_image[x_ceil_point]
+        print(f"Floor Point: {x_floor_point}, Ceil Point: {x_ceil_point}")
+        print(f"Floor Value: {y_floor_point}, Ceil Value: {y_ceil_point}")
+        if x_ceil_point == x_floor_point and y_floor_point == y_ceil_point:
+            new_array.append(y_floor_point)
         else:
-            xu, yu = ceil_point - floor_point, original_image[ceil_point] - original_image[floor_point]
-            new_point = (((ratio * i) - floor_point) / xu) * yu + original_image[floor_point]
+            xu, yu = x_ceil_point - x_floor_point, y_ceil_point - y_floor_point
+            new_point = (((ratio * i) - x_floor_point) / xu) * yu + y_floor_point
             new_array.append(new_point)
     print(f'Original Array: {original_image}')
     print(f'New Array: {new_array}')
