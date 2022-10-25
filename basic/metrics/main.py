@@ -47,3 +47,6 @@ if __name__ == '__main__':
     print("Confusion Matrix Normalization")
     normalization_cnf = cnf / cnf.sum(axis=1, keepdims=True)
     print(normalization_cnf)
+
+    print("=" * 50)
+    print("True/ False Positive/ Negative")
